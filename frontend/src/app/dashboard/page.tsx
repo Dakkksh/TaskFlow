@@ -64,7 +64,6 @@ export default function DashboardPage() {
       toast.success('Task updated!');
       setEditingTask(null);
       setModalOpen(false);
-      loadTasks();
     } catch {
       toast.error('Failed to update task');
     }
@@ -75,7 +74,6 @@ export default function DashboardPage() {
     try {
       await deleteTask(id);
       toast.success('Task deleted');
-      loadTasks();
     } catch {
       toast.error('Failed to delete task');
     }

@@ -30,23 +30,56 @@ export const useTasks = () => {
 
   const createTask = useCallback(async (payload: Partial<Task>) => {
     const { data } = await api.post('/tasks', payload);
-    return data.task as Task;
+    const newTask = data.task as Task;
+
+    // ✅ Add new task to local state instantly
+    setTasksData((prev) => {
+      if (!prev) return { tasks: [newTask], pagination: { page: 1, limit: 1000, total: 1, totalPages: 1, hasNext: false, hasPrev: false } };
+      return {
+        ...prev,
+        tasks: [newTask, ...prev.tasks],
+        pagination: { ...prev.pagination, total: prev.pagination.total + 1 },
+      };
+    });
+
+    return newTask;
   }, []);
 
   const updateTask = useCallback(async (id: string, payload: Partial<Task>) => {
     const { data } = await api.patch(`/tasks/${id}`, payload);
-    return data.task as Task;
+    const updatedTask = data.task as Task;
+
+    // ✅ Update task in local state instantly
+    setTasksData((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        tasks: prev.tasks.map((t) => (t.id === id ? updatedTask : t)),
+      };
+    });
+
+    return updatedTask;
   }, []);
 
   const deleteTask = useCallback(async (id: string) => {
     await api.delete(`/tasks/${id}`);
+
+    // ✅ Remove task from local state instantly
+    setTasksData((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        tasks: prev.tasks.filter((t) => t.id !== id),
+        pagination: { ...prev.pagination, total: prev.pagination.total - 1 },
+      };
+    });
   }, []);
 
   const toggleTask = useCallback(async (id: string) => {
     const { data } = await api.post(`/tasks/${id}/toggle`);
     const updatedTask = data.task as Task;
 
-    // ✅ Update local state immediately — no refetch needed
+    // ✅ Update task status in local state instantly
     setTasksData((prev) => {
       if (!prev) return prev;
       return {
